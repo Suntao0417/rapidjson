@@ -1,5 +1,5 @@
 // Tencent is pleased to support the open source community by making RapidJSON available.
-// 
+//
 // Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip. All rights reserved.
 //
 // Licensed under the MIT License (the "License"); you may not use this file except
@@ -7,9 +7,9 @@
 //
 // http://opensource.org/licenses/MIT
 //
-// Unless required by applicable law or agreed to in writing, software distributed 
-// under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR 
-// CONDITIONS OF ANY KIND, either express or implied. See the License for the 
+// Unless required by applicable law or agreed to in writing, software distributed
+// under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+// CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 
 #ifndef RAPIDJSON_ENCODINGS_H_
@@ -29,63 +29,6 @@ RAPIDJSON_DIAG_OFF(overflow)
 
 RAPIDJSON_NAMESPACE_BEGIN
 
-///////////////////////////////////////////////////////////////////////////////
-// Encoding
-
-/*! \class rapidjson::Encoding
-    \brief Concept for encoding of Unicode characters.
-
-\code
-concept Encoding {
-    typename Ch;    //! Type of character. A "character" is actually a code unit in unicode's definition.
-
-    enum { supportUnicode = 1 }; // or 0 if not supporting unicode
-
-    //! \brief Encode a Unicode codepoint to an output stream.
-    //! \param os Output stream.
-    //! \param codepoint An unicode codepoint, ranging from 0x0 to 0x10FFFF inclusively.
-    template<typename OutputStream>
-    static void Encode(OutputStream& os, unsigned codepoint);
-
-    //! \brief Decode a Unicode codepoint from an input stream.
-    //! \param is Input stream.
-    //! \param codepoint Output of the unicode codepoint.
-    //! \return true if a valid codepoint can be decoded from the stream.
-    template <typename InputStream>
-    static bool Decode(InputStream& is, unsigned* codepoint);
-
-    //! \brief Validate one Unicode codepoint from an encoded stream.
-    //! \param is Input stream to obtain codepoint.
-    //! \param os Output for copying one codepoint.
-    //! \return true if it is valid.
-    //! \note This function just validating and copying the codepoint without actually decode it.
-    template <typename InputStream, typename OutputStream>
-    static bool Validate(InputStream& is, OutputStream& os);
-
-    // The following functions are deal with byte streams.
-
-    //! Take a character from input byte stream, skip BOM if exist.
-    template <typename InputByteStream>
-    static CharType TakeBOM(InputByteStream& is);
-
-    //! Take a character from input byte stream.
-    template <typename InputByteStream>
-    static Ch Take(InputByteStream& is);
-
-    //! Put BOM to output byte stream.
-    template <typename OutputByteStream>
-    static void PutBOM(OutputByteStream& os);
-
-    //! Put a character to output byte stream.
-    template <typename OutputByteStream>
-    static void Put(OutputByteStream& os, Ch c);
-};
-\endcode
-*/
-
-///////////////////////////////////////////////////////////////////////////////
-// UTF8
-
 //! UTF-8 encoding.
 /*! http://en.wikipedia.org/wiki/UTF-8
     http://tools.ietf.org/html/rfc3629
@@ -100,7 +43,7 @@ struct UTF8 {
 
     template<typename OutputStream>
     static void Encode(OutputStream& os, unsigned codepoint) {
-        if (codepoint <= 0x7F) 
+        if (codepoint <= 0x7F)
             os.Put(static_cast<Ch>(codepoint & 0xFF));
         else if (codepoint <= 0x7FF) {
             os.Put(static_cast<Ch>(0xC0 | ((codepoint >> 6) & 0xFF)));
@@ -122,7 +65,7 @@ struct UTF8 {
 
     template<typename OutputStream>
     static void EncodeUnsafe(OutputStream& os, unsigned codepoint) {
-        if (codepoint <= 0x7F) 
+        if (codepoint <= 0x7F)
             PutUnsafe(os, static_cast<Ch>(codepoint & 0xFF));
         else if (codepoint <= 0x7FF) {
             PutUnsafe(os, static_cast<Ch>(0xC0 | ((codepoint >> 6) & 0xFF)));
@@ -276,7 +219,7 @@ struct UTF16 {
     static void Encode(OutputStream& os, unsigned codepoint) {
         RAPIDJSON_STATIC_ASSERT(sizeof(typename OutputStream::Ch) >= 2);
         if (codepoint <= 0xFFFF) {
-            RAPIDJSON_ASSERT(codepoint < 0xD800 || codepoint > 0xDFFF); // Code point itself cannot be surrogate pair 
+            RAPIDJSON_ASSERT(codepoint < 0xD800 || codepoint > 0xDFFF); // Code point itself cannot be surrogate pair
             os.Put(static_cast<typename OutputStream::Ch>(codepoint));
         }
         else {
@@ -292,7 +235,7 @@ struct UTF16 {
     static void EncodeUnsafe(OutputStream& os, unsigned codepoint) {
         RAPIDJSON_STATIC_ASSERT(sizeof(typename OutputStream::Ch) >= 2);
         if (codepoint <= 0xFFFF) {
-            RAPIDJSON_ASSERT(codepoint < 0xD800 || codepoint > 0xDFFF); // Code point itself cannot be surrogate pair 
+            RAPIDJSON_ASSERT(codepoint < 0xD800 || codepoint > 0xDFFF); // Code point itself cannot be surrogate pair
             PutUnsafe(os, static_cast<typename OutputStream::Ch>(codepoint));
         }
         else {
@@ -406,7 +349,7 @@ struct UTF16BE : UTF16<CharType> {
 ///////////////////////////////////////////////////////////////////////////////
 // UTF32
 
-//! UTF-32 encoding. 
+//! UTF-32 encoding.
 /*! http://en.wikipedia.org/wiki/UTF-32
     \tparam CharType Type for storing 32-bit UTF-32 data. Default is unsigned. C++11 may use char32_t instead.
     \note implements Encoding concept
@@ -498,7 +441,7 @@ struct UTF32BE : UTF32<CharType> {
     static CharType TakeBOM(InputByteStream& is) {
         RAPIDJSON_STATIC_ASSERT(sizeof(typename InputByteStream::Ch) == 1);
         CharType c = Take(is);
-        return static_cast<uint32_t>(c) == 0x0000FEFFu ? Take(is) : c; 
+        return static_cast<uint32_t>(c) == 0x0000FEFFu ? Take(is) : c;
     }
 
     template <typename InputByteStream>
@@ -694,13 +637,13 @@ struct Transcoder<Encoding, Encoding> {
         os.Put(is.Take());  // Just copy one code unit. This semantic is different from primary template class.
         return true;
     }
-    
+
     template<typename InputStream, typename OutputStream>
     RAPIDJSON_FORCEINLINE static bool TranscodeUnsafe(InputStream& is, OutputStream& os) {
         PutUnsafe(os, is.Take());  // Just copy one code unit. This semantic is different from primary template class.
         return true;
     }
-    
+
     template<typename InputStream, typename OutputStream>
     RAPIDJSON_FORCEINLINE static bool Validate(InputStream& is, OutputStream& os) {
         return Encoding::Validate(is, os);  // source/target encoding are the same

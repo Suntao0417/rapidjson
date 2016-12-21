@@ -276,6 +276,28 @@ inline const char* SkipWhitespace(const char* p, const char* end) {
     return p;
 }
 
+inline const char *SkipWhitespace_SIMD(const char* p) {
+    // ... 非对齐处理
+
+    static const char whitespace[16] = " \n\r\t";
+    const __m128i w = _mm_load_si128((const __m128i *)&whitespace[0]);
+
+    for (;; p += 16) {
+        const __m128i s = _mm_load_si128((const __m128i *)p);
+        const unsigned r = _mm_cvtsi128_si32(_mm_cmpistrm(w, s,
+            _SIDD_UBYTE_OPS | _SIDD_CMP_EQUAL_ANY |
+            _SIDD_BIT_MASK | _SIDD_NEGATIVE_POLARITY));
+
+        if (r != 0) {   // some of characters is non-whitespace
+#ifdef _MSC_VER         // Find the index of first non-whitespace
+            unsigned long offset;
+            _BitScanForward(&offset, r);
+            return p + offset;
+#else
+            return p + __builtin_ffs(r) - 1;
+#endif
+}
+
 #ifdef RAPIDJSON_SSE42
 //! Skip whitespace with SSE 4.2 pcmpistrm instruction, testing 16 8-byte characters at once.
 inline const char *SkipWhitespace_SIMD(const char* p) {
